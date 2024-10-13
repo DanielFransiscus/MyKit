@@ -156,7 +156,7 @@ DECLARE @where VARCHAR(MAX) = (
             'AND phr.RegistrationNo = @p_RegistrationNo'
         )
         
-        --print @tot
+ 
         
    
 
