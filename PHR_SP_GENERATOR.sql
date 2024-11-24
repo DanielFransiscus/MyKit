@@ -1,18 +1,17 @@
 /************************************************************
  * Code formatted by SoftTree SQL Assistant © v11.3.277
- * Time: 13/10/2024 17:12:57
+ * Time: 24/11/2024 19:10:29
  ************************************************************/
 
---phr generator
---kutip empat mencetak single quote
- 
-DECLARE @p_TransactionNo      VARCHAR(25) = 'PHR/20241007-0642',
-        @p_RegistrationNo     VARCHAR(25) = 'REG/OP/220614-0539',
-        @p_QuestionFormID     VARCHAR(25) = 'KMOS'  
+DECLARE @p_TransactionNo      VARCHAR(25) = 'PHR/20241112-0060',
+        @p_RegistrationNo     VARCHAR(25) = 'REG/EM/241112-0011',
+        @p_QuestionFormID     VARCHAR(25) = 'KMOS',
+        @p_FromDate           VARCHAR(25) = '',
+        @p_ToDate             VARCHAR(25) = ''
    
  
 SET NOCOUNT on
-CREATE TABLE ##bagsatu
+CREATE TABLE ##temp_table
 (
 	RowIndex         INT,
 	nomor            INT,
@@ -20,9 +19,7 @@ CREATE TABLE ##bagsatu
 	QuestionID       VARCHAR(20),
 	QuestionText     VARCHAR(MAX),
 	SRAnswerType     VARCHAR(20),
-)
-  --temp table harus diatas karena cte tidak mengizinkan temp table dibawahnya
-;
+);
 WITH cte as (
          SELECT distinct
                 qig.RowIndex,
@@ -44,13 +41,13 @@ WITH cte as (
                      ON  qas.QuestionAnswerSelectionID = qasl.QuestionAnswerSelectionID
                 LEFT JOIN AppProgram     AS ap WITH (NOLOCK)
                      ON  qf.ReportProgramID = ap.ProgramID
-         WHERE  qf.QuestionFormID = 'KMOS'
+         WHERE  qf.QuestionFormID = @p_QuestionFormID
      )
   
   
 
   
-INSERT INTO ##bagsatu
+INSERT INTO ##temp_table
   (
     RowIndex,
     nomor,
@@ -71,15 +68,21 @@ ORDER BY
        
 DECLARE @tot VARCHAR(10) = (
             SELECT COUNT(*)
-            FROM   ##bagsatu AS b
-        )     
+            FROM   ##temp_table AS b
+        )    
+        
+        
+
+         
        
-DECLARE @teks0     NVARCHAR(MAX) = (
+DECLARE @bagian1 NVARCHAR(MAX) = (
             'DECLARE @p_TransactionNo	VARCHAR(25)' + '=' + '''' + @p_TransactionNo + '''' + ',' + CHAR(13) + CHAR(10) 
             +
             '@p_RegistrationNo	VARCHAR(25)' + '=' + '''' + @p_RegistrationNo + '''' + ',' + CHAR(13) + CHAR(10) +
             
             '@p_QuestionFormID	VARCHAR(25)' + '=' + '''' + @p_QuestionFormID + '''' + CHAR(13) + CHAR(10) +
+            
+            
             
             'SELECT' + CHAR(13) + CHAR(10) +
             'phr.TransactionNo,' + CHAR(13) + CHAR(10) +
@@ -88,37 +91,67 @@ DECLARE @teks0     NVARCHAR(MAX) = (
             'p.MedicalNo,  ' + CHAR(13) + CHAR(10)
         )
 
-DECLARE @teks1     VARCHAR(MAX) = (
+DECLARE @bagian1_1     NVARCHAR(MAX) = (
+            'DECLARE @p_FromDate ' + 'DATETIME' + '=' + '''' + @p_FromDate + '''' + ',' +
+            
+            '@p_ToDate	DATETIME' + '=' + '''' + @p_ToDate + '''' +
+            
+            'SELECT' + CHAR(13) + CHAR(10) +
+            'phr.TransactionNo,' + CHAR(13) + CHAR(10)
+        )
+       
+        
+
+
+
+DECLARE @teks1         VARCHAR(MAX) = (
             SELECT STRING_AGG(
                        CASE 
-                            WHEN b.SRAnswerType != 'CTX' THEN CHAR(13) + CHAR(10) + b.nourut + '.QuestionAnswerText' +
+                            WHEN b.SRAnswerType = 'SIG' THEN CHAR(13) + CHAR(10) + b.nourut + '.BodyImage' +
                                  ' AS ' + '''' +
-                                 b.QuestionText +
+                                 LEFT(REPLACE(b.QuestionText, ',', ''), 45) +
                                  
                                  CASE 
                                       WHEN @tot = b.nomor THEN ''''
                                       ELSE ''','
                                  END
                             WHEN b.SRAnswerType = 'CTX' THEN ' SUBSTRING(' + b.nourut + '.QuestionAnswerText, 1, 1)' +
-                                 ' AS ' + '''' + b.QuestionText + CASE 
-                                                                       WHEN @tot = b.nomor THEN ''''
-                                                                       ELSE ''','
-                                                                  END + CHAR(13) + CHAR(10) 
+                                 ' AS ' + '''' + LEFT(REPLACE(b.QuestionText, ',', ''), 45) + CASE 
+                                                                                                   WHEN @tot = b.nomor THEN 
+                                                                                                        ''''
+                                                                                                   ELSE ''','
+                                                                                              END + CHAR(13) + CHAR(10) + 
+                        'CASE ' +
+'WHEN SUBSTRING(' + b.nourut + '.QuestionAnswerText, 1, 2) = ''1|'' THEN LTRIM(REPLACE(' + b.nourut + '.QuestionAnswerText, ''1|'', '''')) ' +
+'WHEN SUBSTRING(' + b.nourut + '.QuestionAnswerText, 1, 2) = ''0|'' THEN LTRIM(REPLACE(' + b.nourut + '.QuestionAnswerText, ''0|'', '''')) ' +
+'END ' +
+'AS ''' + 'keterangan_' + LEFT(REPLACE(b.QuestionText, ',', ''), 45) + CASE 
+                                                     WHEN @tot = b.nomor THEN ''''
+                                                     ELSE ''','
+                                                 END + CHAR(13) + CHAR(10)
+
+                                                                                              
+                         
+                                                                                              
+                                                                                              
+                                                                                              
+                                                                                              
+                                                                                              
+                            ELSE CHAR(13) + CHAR(10) + b.nourut + '.QuestionAnswerText' +
+                                 ' AS ' + '''' +
+                                 LEFT(REPLACE(b.QuestionText, ',', ''), 45) +
                                  
-                                 
-                                 
-                                 
-                                 
-                                 --CASE
-                                 --     WHEN SUBSTRING(phrl4.QuestionAnswerText, 1, 2) = '1|' THEN LTRIM(REPLACE(phrl4.QuestionAnswerText, '1|', ''))
-                                 --     WHEN SUBSTRING(phrl4.QuestionAnswerText, 1, 2) = '0|' THEN LTRIM(REPLACE(phrl4.QuestionAnswerText, '0|', ''))
-                                 --END                         AS 'ans_AIRWAY_Obstruksi Total / Parsial',
+                                 CASE 
+                                      WHEN @tot = b.nomor THEN ''''
+                                      ELSE ''','
+                                 END
                        END,
                        CHAR(13) + CHAR(10)
-                   )          AS teks
-            FROM   ##bagsatu  AS b
+                   )             AS teks
+            FROM   ##temp_table  AS b
         );
         
+          
         
 DECLARE @teks2     VARCHAR(MAX) = (
             CHAR(13) + CHAR(10) + 'FROM   PatientHealthRecord         AS phr with (NOLOCK) ' +
@@ -145,28 +178,53 @@ DECLARE @teks3     VARCHAR(MAX) = (
                            as VARCHAR(MAX)
                        ),
                        CHAR(13) + CHAR(10)
-                   )          AS teks
-            FROM   ##bagsatu  AS b
+                   )             AS teks
+            FROM   ##temp_table  AS b
         )
 
 
-DECLARE @where VARCHAR(MAX) = (
+DECLARE @where1 VARCHAR(MAX) = (
             'WHERE  phr.TransactionNo = @p_TransactionNo' + CHAR(13) + CHAR(10) +
             'AND phr.QuestionFormID = @p_QuestionFormID' + CHAR(13) + CHAR(10) +
             'AND phr.RegistrationNo = @p_RegistrationNo'
         )
+
+DECLARE @where2 VARCHAR(MAX) = (
+            'WHERE phr.QuestionFormID = ' + '''' + @p_QuestionFormID + '''' + CHAR(13) + CHAR(10) +
+            ' AND phr.RecordDate > = @p_FromDate
+       AND phr.RecordDate <= @p_ToDate'
+        )
         
  
         
-   
+IF @p_TransactionNo != ''
+   AND @p_RegistrationNo != ''
+   AND @p_QuestionFormID != ''
+   AND @p_FromDate = ''
+   AND @p_ToDate = ''
+BEGIN
+    SELECT TRIM(@bagian1) + TRIM(@teks1) + TRIM(@teks2) + CHAR(13) + CHAR(10) + TRIM(@teks3) + CHAR(13) + CHAR(10) +
+           TRIM(@where1)
+END
 
-SELECT TRIM(@teks0) + TRIM(@teks1) + TRIM(@teks2) + CHAR(13) + CHAR(10) + TRIM(@teks3) + CHAR(13) + CHAR(10) + TRIM(@where)
+IF @p_TransactionNo = ''
+   AND @p_RegistrationNo = ''
+   AND @p_QuestionFormID != ''
+   AND @p_FromDate != ''
+   AND @p_ToDate != ''
+BEGIN
+    SELECT TRIM(@bagian1_1) + TRIM(@teks1) + TRIM(@teks2) + CHAR(13) + CHAR(10) + TRIM(@teks3) + CHAR(13) + CHAR(10) 
+           + TRIM(@where2)
+END
+
+
+
             
             
             
             
             
-DROP TABLE ##bagsatu
+DROP TABLE ##temp_table
      
        
      
