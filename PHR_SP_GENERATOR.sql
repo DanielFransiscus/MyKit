@@ -1,11 +1,11 @@
-/************************************************************
- * Code formatted by SoftTree SQL Assistant © v11.3.277
+ï»¿/************************************************************
+ * Code formatted by SoftTree SQL Assistant ï¿½ v11.3.277
  * Time: 26/11/2024 10:02:01
  ************************************************************/
 
-DECLARE @p_TransactionNo VARCHAR(25) = 'PHR/20231201-0006',
-        @p_RegistrationNo VARCHAR(25) = 'REG/IP/231201-0001',
-        @p_QuestionFormID VARCHAR(25) = 'PAR',
+DECLARE @p_TransactionNo VARCHAR(25) = 'PHR/20250106-1416',
+        @p_RegistrationNo VARCHAR(25) = 'REG/IP/241231-0034',
+        @p_QuestionFormID VARCHAR(25) = 'MKUL',
         @p_FromDate VARCHAR(25) = '',
         @p_ToDate VARCHAR(25) = ''
  
@@ -92,8 +92,8 @@ DECLARE @bagian2       VARCHAR(MAX) = TRIM(
                 SELECT STRING_AGG(
                            CASE 
                                 WHEN b.SRAnswerType = 'SIG' THEN @NewLineChar + b.nourut + '.BodyImage' +
-                                     ' AS ' + '''' + b.QuestionID + '_' +
-                                     LEFT(REPLACE(b.QuestionText, ',', ''), 45) +
+                                     ' AS ' + '''' + 
+                                     LEFT(REPLACE(b.QuestionText, ',', ''), 45)+ '_' +b.QuestionID  +
                                      
                                      CASE 
                                           WHEN @tot = b.nomor THEN ''''
@@ -101,7 +101,7 @@ DECLARE @bagian2       VARCHAR(MAX) = TRIM(
                                      END
                                 WHEN b.SRAnswerType IN ('CTX', 'CTM') THEN ' SUBSTRING(' + b.nourut +
                                      '.QuestionAnswerText, 1, 1)' +
-                                     ' AS ' + '''' + b.QuestionID + '_' + LEFT(REPLACE(b.QuestionText, ',', ''), 45) + CASE 
+                                     ' AS ' + '''' + LEFT(REPLACE(b.QuestionText, ',', ''), 45)+ '_' +b.QuestionID  + CASE 
                                                                                                                             WHEN 
                                                                                                                                  @tot 
                                                                                                                                  =
@@ -120,7 +120,7 @@ DECLARE @bagian2       VARCHAR(MAX) = TRIM(
                                      '.QuestionAnswerText, 1, 2) = ''0|'' THEN LTRIM(REPLACE(' + b.nourut +
                                      '.QuestionAnswerText, ''0|'', '''')) ' +
                                      'END ' +
-                                     'AS ''' + 'keterangan_' + b.QuestionID + '_' + LEFT(REPLACE(b.QuestionText, ',', ''), 45) 
+                                     'AS ''' + 'keterangan_'  + LEFT(REPLACE(b.QuestionText, ',', ''), 45) + '_' +b.QuestionID +
                                      + CASE 
                                             WHEN @tot 
                                                  =
@@ -129,8 +129,8 @@ DECLARE @bagian2       VARCHAR(MAX) = TRIM(
                                        END 
                                      + @NewLineChar
                                 ELSE @NewLineChar + b.nourut + '.QuestionAnswerText' +
-                                     ' AS ' + '''' + b.QuestionID + '_' +
-                                     LEFT(REPLACE(b.QuestionText, ',', ''), 45) +
+                                     ' AS ' + ''''  +
+                                     LEFT(REPLACE(b.QuestionText, ',', ''), 45)+ '_'  +b.QuestionID +
                                      
                                      CASE 
                                           WHEN @tot = b.nomor THEN ''''
@@ -214,3 +214,9 @@ END
 
                         
 DROP TABLE ##temp_table
+
+
+
+
+
+
